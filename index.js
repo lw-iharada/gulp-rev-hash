@@ -12,6 +12,7 @@ module.exports = function(options) {
   var endReg = /<!--\s*end\s*-->/gim;
   var jsAndCssReg = /<\s*script\s+.*?src\s*=\s*"([^"]+.js).*".*?><\s*\/\s*script\s*>|<\s*link\s+.*?href\s*=\s*"([^"]+.css).*".*?>/gi;
   var regSpecialsReg = /([.?*+^$[\]\\(){}|-])/g;
+  var absolutePathReg = /^(http:|https:)*?\/\/[^\/]*\/?/gi;
   var basePath, mainPath, mainName, alternatePath;
 
   function getBlockType(content) {
@@ -27,6 +28,7 @@ module.exports = function(options) {
         tags.push({
           html: a,
           path: b || c,
+          localPath: (b || c).replace(absolutePathReg, ''),
           pathReg: new RegExp(escapeRegSpecials(b || c) + '.*?"', 'g')
         });
       });
@@ -69,7 +71,7 @@ module.exports = function(options) {
               .createHash('md5')
               .update(
                 fs.readFileSync(
-                  path.join((options.assetsDir?options.assetsDir:''), tag.path), {encoding: 'utf8'}))
+                  path.join((options.assetsDir?options.assetsDir:''), tag.localPath), {encoding: 'utf8'}))
               .digest("hex");
             html.push(tag.html.replace(tag.pathReg, tag.path + '?v=' + hash + '"') + '\r\n');
           }
